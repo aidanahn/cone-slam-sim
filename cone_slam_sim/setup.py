@@ -26,6 +26,7 @@ setup(
     entry_points={
         'console_scripts': [
             'cone_map_publisher = cone_slam_sim.cone_map_publisher:main',
+            'cone_visualizer = cone_slam_sim.cone_visualizer:main',
         ],
     },
 )
