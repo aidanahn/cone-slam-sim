@@ -11,6 +11,8 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/tracks', ['tracks/FSI.yaml']),
+        ('share/' + package_name + '/launch',
+            ['launch/simulation_launch.py']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

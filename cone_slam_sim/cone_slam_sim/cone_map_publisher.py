@@ -37,7 +37,7 @@ class ConeMapPublisher(Node):
     def publish_cone_map(self):
         message = ConeArray()
         message.header.stamp = self.get_clock().now().to_msg()
-        message.header.frame_id = 'map'
+        message.header.frame_id = 'world'
 
         for x, y in self.cones_left:
             cone = Cone()
