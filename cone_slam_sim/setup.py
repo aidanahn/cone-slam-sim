@@ -10,6 +10,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name + '/tracks', ['tracks/FSI.yaml']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -24,6 +25,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'cone_map_publisher = cone_slam_sim.cone_map_publisher:main',
         ],
     },
 )

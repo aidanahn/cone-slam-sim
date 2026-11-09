@@ -1,9 +1,9 @@
 from pathlib import Path
 
-import rclpy
-import yaml
 from ament_index_python.packages import get_package_share_directory
+import rclpy
 from rclpy.node import Node
+import yaml
 
 
 class ConeMapPublisher(Node):
@@ -11,9 +11,9 @@ class ConeMapPublisher(Node):
         super().__init__('cone_map_publisher')
 
         track_path = (
-            Path(get_package_share_directory('cone_slam_sim')) 
-            / 'tracks' 
-            / 'fsi.yaml'
+            Path(get_package_share_directory('cone_slam_sim'))
+            / 'tracks'
+            / 'FSI.yaml'
         )
 
         self.cones_left, self.cones_right = self.load_track(track_path)
