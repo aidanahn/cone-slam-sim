@@ -1,31 +1,46 @@
-# This code adds the fsds package to the python path.
-# It assumes the fsds repo is cloned in the home directory.
-# Replace fsds_lib_path with a path to wherever the python directory is located.
-import sys, os
-fsds_lib_path = r"C:\Projects\Formula-Student-Driverless-Simulator\python"
-sys.path.insert(0, fsds_lib_path)
+import sys
 
-import time
+FSDS_LIB_PATH = r"C:\Projects\Formula-Student-Driverless-Simulator\python"
+sys.path.insert(0, FSDS_LIB_PATH)
+
 import fsds
+import matplotlib.pyplot as plt
 
-# connect to the AirSim simulator 
-client = fsds.FSDSClient()
+CONE_COLORS = {
+    0: 'yellow',
+    1: 'blue',
+    2: 'orange'
+}
+MARKER_SIZE = 10
+PLOT_REFRESH_INTERVAL = 0.01
 
-# Check network connection
-client.confirmConnection()
+try:
+    client = fsds.FSDSClient()
+    client.enableApiControl(False)
 
-# After enabling api controll only the api can controll the car. 
-# Direct keyboard and joystick into the simulator are disabled.
-# If you want to still be able to drive with the keyboard while also 
-# controll the car using the api, call client.enableApiControl(False)
-client.enableApiControl(True)
+    referee = client.getRefereeState()
+    cones = referee.cones
+    origin_x, origin_y = referee.initial_position.x, referee.initial_position.y
 
-# Instruct the car to go full-speed forward
-car_controls = fsds.CarControls()
-car_controls.throttle = 1
-client.setCarControls(car_controls)
+    x = [(cone['x'] - origin_x) / 100.0 for cone in cones]
+    y = [-(cone['y'] - origin_y) / 100.0 for cone in cones]
+    color = [CONE_COLORS[cone['color']] for cone in cones]
+    
+    plt.ion()
+    vehicle = plt.scatter(0, 0, c='red', s=MARKER_SIZE)
+    plt.scatter(x, y, c=color, s=MARKER_SIZE)
+    plt.axis("equal")
+    plt.show()
 
-time.sleep(5)
+    while True:
+        ground_truth = client.simGetGroundTruthKinematics()
+        
+        vehicle.set_offsets([[
+            ground_truth.position.x_val,
+            ground_truth.position.y_val
+        ]])
 
-# Places the vehicle back at it's original position
-client.reset()
+        plt.pause(PLOT_REFRESH_INTERVAL)
+
+except KeyboardInterrupt:
+    client.reset()
