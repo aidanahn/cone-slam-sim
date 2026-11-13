@@ -6,10 +6,10 @@ sys.path.insert(0, FSDS_LIB_PATH)
 import fsds
 import numpy as np
 
-CONE_DETECTION_RANGE = 15
+CONE_DETECTION_RANGE = 15.0
+MIN_CONE_LOCAL_X = -1.0
 RADIAL_GAUSSIAN_NOISE = 0.05
 ANGULAR_GAUSSIAN_NOISE = 0.007
-
 
 def map_to_car_frame(cone_x, cone_y, car_x, car_y, car_yaw):
     offset_x = cone_x - car_x
@@ -41,40 +41,49 @@ def quaternion_to_yaw_rad(quaternion):
 
     return np.arctan2(sin_yaw, cos_yaw)
 
+def simulate_cone_observations(cone_positions, car_x, car_y, car_yaw):
+    detected_cones = []
+
+    for cone_x, cone_y in cone_positions:
+        local_x, local_y = map_to_car_frame(cone_x, cone_y, car_x, car_y, car_yaw)
+
+        distance = np.hypot(local_x, local_y)
+
+        
+        if distance < CONE_DETECTION_RANGE and local_x >= MIN_CONE_LOCAL_Xz:
+            angle = np.arctan2(local_y, local_x)
+
+            noisy_distance = distance + np.random.normal(0.0, scale=RADIAL_GAUSSIAN_NOISE)
+            noisy_angle = angle + np.random.normal(0.0, scale=ANGULAR_GAUSSIAN_NOISE)
+
+            noisy_x = noisy_distance * np.cos(noisy_angle)
+            noisy_y = noisy_distance * np.sin(noisy_angle)
+
+            detected_cones.append((noisy_x, noisy_y))
+
+    return detected_cones
+
 try:
     client = fsds.FSDSClient()
-    client.enableApiControl(False)
-
     referee = client.getRefereeState()
-    cones = referee.cones
 
-    cone_xs = [(cone['x'] - referee.initial_position.x) / 100.0 for cone in cones]
-    cone_ys = [-(cone['y'] - referee.initial_position.y) / 100.0 for cone in cones]
+    cone_positions = [
+        (
+            (cone['x'] - referee.initial_position.x) / 100.0,
+            (-cone['x'] - referee.initial_position.x) / 100.0
+        ) 
+        for cone in referee.cones
+    ]
 
     while True:
-        car_kinematics = client.simGetGroundTruthKinematics()
+        kinematics = client.simGetGroundTruthKinematics()
 
-        car_x = car_kinematics.position.x_val
-        car_y = car_kinematics.position.y_val
-        car_yaw = quaternion_to_yaw_rad(car_kinematics.orientation)
-
-        detected_cones = []
-
-        for cone_x, cone_y in zip(cone_xs, cone_ys):
-            local_x, local_y = map_to_car_frame(cone_x, cone_y, car_x, car_y, car_yaw)
-
-            distance = np.hypot(local_x, local_y)
-
-            if distance < CONE_DETECTION_RANGE and local_x >= -1:
-                angle = np.arctan2(local_y, local_x)
-
-                noisy_distance = distance + np.random.normal(0.0, scale=RADIAL_GAUSSIAN_NOISE)
-                noisy_angle = angle + np.random.normal(0.0, scale=ANGULAR_GAUSSIAN_NOISE)
-
-                noisy_x = noisy_distance * np.cos(noisy_angle)
-                noisy_y = noisy_distance * np.sin(noisy_angle)
-
-                detected_cones.append((noisy_x, noisy_y))
+        detected_cones = simulate_cone_observations(
+            cone_positions,
+            kinematics.position.x_val,
+            kinematics.position.y_val,
+            quaternion_to_yaw_rad(kinematics.orientation)
+        )
 
 except KeyboardInterrupt:
     client.reset()
