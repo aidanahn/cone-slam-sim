@@ -17,6 +17,7 @@ ANGULAR_GAUSSIAN_NOISE = 0.007
 POS_X_GAUSSIAN_NOISE = 0.01
 POS_Y_GAUSSIAN_NOISE = 0.01
 YAW_Z_GAUSSIAN_NOISE = 0.01
+INITIAL_POSE = Pose(0, 0, 0)
 
 def map_to_car_frame(cone_x, cone_y, car_x, car_y, car_yaw):
     offset_x = cone_x - car_x
@@ -29,7 +30,6 @@ def map_to_car_frame(cone_x, cone_y, car_x, car_y, car_yaw):
     local_y = -sin_yaw * offset_x + cos_yaw * offset_y
 
     return local_x, local_y
-
 
 def quaternion_to_yaw_rad(quaternion):
     x = quaternion.x_val
@@ -94,11 +94,10 @@ try:
         for cone in referee.cones
     ]
 
-    x_est = 0
-    y_est = 0
-    yaw_est = 0
-
     slam = GraphSLAM()
+
+    previous_pose = Pose(INITIAL_POSE)
+    previous_node_id = slam.add_pose(previous_pose)
 
     previous_time = time.perf_counter()
 
@@ -109,16 +108,32 @@ try:
         dt = current_time - previous_time
         previous_time = current_time
 
-        x_est, y_est, yaw_est = update_pose(
-            x_est,
-            y_est,
-            yaw_est,
-            kinematics,
-            dt
-        )
-
-        pose = Pose(x_est, y_est, yaw_est)
+        pose = Pose(
+            *update_pose(
+                previous_pose.x,
+                previous_pose.y,
+                previous_pose.yaw,
+                kinematics,
+                dt
+            ))
         node_id = slam.add_pose(pose)
+
+        world_dx = pose.x - previous_pose.x
+        world_dy = pose.y - previous_pose.y
+        dyaw = pose.yaw - previous_pose.yaw
+        dyaw = np.arctan2(np.sin(dyaw), np.cos(dyaw))
+
+        cos_yaw = np.cos(previous_pose.yaw)
+        sin_yaw = np.sin(previous_pose.yaw)
+
+        local_dx = cos_yaw * world_dx + sin_yaw * world_dy
+        local_dy = -sin_yaw * world_dx + cos_yaw * world_dy
+
+        measurement = Pose(local_dx, local_dy, dyaw)
+        slam.add_edge(previous_node_id, node_id, measurement)
+
+        previous_pose = pose
+        previous_node_id = node_id
 
         x_true = kinematics.position.x_val
         y_true = kinematics.position.y_val
