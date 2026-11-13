@@ -96,7 +96,7 @@ try:
 
     slam = GraphSLAM()
 
-    previous_pose = Pose(INITIAL_POSE)
+    previous_pose = Pose(INITIAL_POSE.x, INITIAL_POSE.y, INITIAL_POSE.yaw)
     previous_node_id = slam.add_pose(previous_pose)
 
     previous_time = time.perf_counter()
