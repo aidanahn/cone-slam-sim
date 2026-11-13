@@ -7,6 +7,8 @@ import fsds
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+from pose import Pose
+from graph_slam import GraphSLAM
 
 CONE_DETECTION_RANGE = 15.0
 MIN_CONE_LOCAL_X = -1.0
@@ -96,6 +98,8 @@ try:
     y_est = 0
     yaw_est = 0
 
+    slam = GraphSLAM()
+
     previous_time = time.perf_counter()
 
     while True:
@@ -112,6 +116,9 @@ try:
             kinematics,
             dt
         )
+
+        pose = Pose(x_est, y_est, yaw_est)
+        node_id = slam.add_pose(pose)
 
         x_true = kinematics.position.x_val
         y_true = kinematics.position.y_val
