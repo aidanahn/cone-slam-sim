@@ -87,16 +87,14 @@ try:
     cone_positions = [
         (
             (cone['x'] - referee.initial_position.x) / 100.0,
-            (-cone['y'] - referee.initial_position.y) / 100.0
+            -(cone['y'] - referee.initial_position.y) / 100.0
         ) 
         for cone in referee.cones
     ]
 
-    kinematics = client.simGetGroundTruthKinematics()
-
-    x_est = kinematics.position.x_val
-    y_est = kinematics.position.y_val
-    yaw_est = quaternion_to_yaw_rad(kinematics.orientation)
+    x_est = 0
+    y_est = 0
+    yaw_est = 0
 
     previous_time = time.perf_counter()
 
