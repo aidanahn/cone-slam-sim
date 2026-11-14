@@ -1,0 +1,4 @@
+odometry:
+  gaussian_noise_vx_sigma: 0.01
+  gaussian_noise_vy_sigma: 0.01
+  gaussian_noise_wz_sigma: 0.01

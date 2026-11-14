@@ -6,17 +6,14 @@ sys.path.insert(0, FSDS_LIB_PATH)
 import fsds
 import numpy as np
 import time
-import matplotlib.pyplot as plt
 from pose import Pose
 from graph_slam import GraphSLAM
+from odometry_model import OdometryModel
 
 CONE_DETECTION_RANGE = 15.0
 MIN_CONE_LOCAL_X = -1.0
 RADIAL_GAUSSIAN_NOISE = 0.05
 ANGULAR_GAUSSIAN_NOISE = 0.007
-POS_X_GAUSSIAN_NOISE = 0.01
-POS_Y_GAUSSIAN_NOISE = 0.01
-YAW_Z_GAUSSIAN_NOISE = 0.01
 INITIAL_POSE = Pose(0, 0, 0)
 
 def map_to_car_frame(cone_x, cone_y, car_x, car_y, car_yaw):
@@ -70,18 +67,6 @@ def simulate_cone_observations(cone_positions, car_x, car_y, car_yaw):
 
     return detected_cones
 
-def update_pose(x_est, y_est, yaw_est, kinematics, dt):
-    dx = (kinematics.linear_velocity.x_val + np.random.normal(0.0, scale=POS_X_GAUSSIAN_NOISE)) * dt
-    dy = (kinematics.linear_velocity.y_val + np.random.normal(0.0, scale=POS_Y_GAUSSIAN_NOISE)) * dt
-    dyaw = (kinematics.angular_velocity.z_val + np.random.normal(0.0, scale=YAW_Z_GAUSSIAN_NOISE)) * dt
-
-    x_est += dx
-    y_est += dy
-    yaw_est += dyaw
-    yaw_est = np.arctan2(np.sin(yaw_est), np.cos(yaw_est))
-
-    return x_est, y_est, yaw_est
-
 try:
     client = fsds.FSDSClient()
     referee = client.getRefereeState()
@@ -96,6 +81,8 @@ try:
 
     slam = GraphSLAM()
 
+    odometry = OdometryModel()
+
     previous_pose = Pose(INITIAL_POSE.x, INITIAL_POSE.y, INITIAL_POSE.yaw)
     previous_node_id = slam.add_pose(previous_pose)
 
@@ -104,18 +91,15 @@ try:
     while True:
         kinematics = client.simGetGroundTruthKinematics()
 
+        print(kinematics.linear_velocity)
+
         current_time = time.perf_counter()
         dt = current_time - previous_time
         previous_time = current_time
 
-        pose = Pose(
-            *update_pose(
-                previous_pose.x,
-                previous_pose.y,
-                previous_pose.yaw,
-                kinematics,
-                dt
-            ))
+        odometry.update_pose(kinematics.linear_velocity.x_val, kinematics.linear_velocity.y_val, kinematics.angular_velocity.z_val, dt)
+        pose = odometry.get_pose()
+        pose = Pose(pose.x, pose.y, pose.theta)
         node_id = slam.add_pose(pose)
 
         world_dx = pose.x - previous_pose.x
