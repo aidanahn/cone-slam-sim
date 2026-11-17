@@ -1,10 +1,11 @@
-from pose2d import Pose2D
 import numpy as np
 import yaml
 
+from pose2d import Pose2D
+
 
 class OdometryModel:
-    def __init__(self, x: float = 0.0, y: float = 0.0, theta: float = 0.0, config_path: str = 'config.yaml'):
+    def __init__(self, x: float = 0.0, y: float = 0.0, theta: float = 0.0, config_path: str = 'config.yaml') -> None:
         self.pose = Pose2D(x, y, theta)
 
         with open(config_path, 'r') as file:

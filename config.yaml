@@ -1,4 +1,13 @@
 odometry:
-  gaussian_noise_vx_sigma: 0.01
-  gaussian_noise_vy_sigma: 0.01
-  gaussian_noise_wz_sigma: 0.01
+  rate_hz: 100.0                          # Odometry update frequency
+  gaussian_noise_vx_sigma: 0.01           # Standard deviation of x velocity noise
+  gaussian_noise_vy_sigma: 0.01           # Standard deviation of y velocity noise
+  gaussian_noise_wz_sigma: 0.01           # Standard deviation of yaw rate noise
+
+cone_observation:
+  rate_hz: 10.0                           # Cone observation frequency
+  observation_radius: 15.0                # Maximum distance at which cones can be observed
+  max_observation_distance_behind: 1.0    # Maximum distance behind the car at which cones can be observed
+
+  gaussian_noise_range_sigma: 0.05        # Standard deviation of cone distance noise
+  gaussian_noise_bearing_sigma: 0.007     # Standard deviation of cone bearing angle noise

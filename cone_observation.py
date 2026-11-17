@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
+
 @dataclass
-class Pose:
+class ConeObservation:
     x: float
     y: float
-    yaw: float
