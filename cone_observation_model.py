@@ -7,10 +7,10 @@ from pose2d import Pose2D
 
 class ConeObservationModel:
     def __init__(self, cones: list[dict], initial_x: int, initial_y: int, config_path: str = 'config.yaml') -> None:
-        self.cones = [((cone['x'] - initial_x) / 100.0, -(cone['y'] - initial_y) / 100.0) for cone in cones]
-
         with open(config_path, 'r') as file:
             self.config = yaml.safe_load(file)['cone_observation']
+    
+        self.cones = [((cone['x'] - initial_x) / 100.0, -(cone['y'] - initial_y) / 100.0) for cone in cones]
 
     def observe(self, pose: Pose2D) -> list[ConeObservation]:
         observations = []
