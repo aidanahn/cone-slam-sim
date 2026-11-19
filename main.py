@@ -91,7 +91,6 @@ def main():
                     current_time + (1.0 / config['cone_observation']['rate_hz'])
                 )
 
-
     except KeyboardInterrupt:
         pass
 
